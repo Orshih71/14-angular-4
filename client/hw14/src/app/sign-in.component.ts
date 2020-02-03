@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
-import {FormBuilder, FormControl, FormGroup, Validators} from "@angular/forms";
+import {Component, OnDestroy, OnInit} from '@angular/core';
+import {FormBuilder, FormGroup, Validators} from "@angular/forms";
+import {UserServiceService} from "./user-service.service";
 
 @Component({
   selector: 'app-sing-in',
@@ -18,23 +19,41 @@ import {FormBuilder, FormControl, FormGroup, Validators} from "@angular/forms";
   `,
   styles: []
 })
-export class SignInComponent implements OnInit {
-  formSignIn : FormGroup;
+export class SignInComponent implements OnInit, OnDestroy {
+  formSignIn: FormGroup;
+  private subs$;
   // const formGroup = new FormGroup({
   //   login: new FormControl(''),
   //   password: new FormControl('')
   // });
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder, private userService: UserServiceService) {
     this.formSignIn = fb.group({
       'username': ['', Validators.required],
       'password': ['', Validators.required]
     });
   }
-  onSubmit(){
-    console.log('val', this.formSignIn.value);
+
+  onSubmit() {
+    this.subs$ = this.userService.sendPost('http://localhost:3000/signin', this.formSignIn.value)
+    .subscribe(res => {
+        if (res.success) {
+          if (res.token) {
+            localStorage.setItem("token", res.token);
+            console.log("Login success");
+          }
+          else console.error(res);
+        } else {
+          console.error("Wrong pass or username");
+        }
+      },
+
+      error => console.error(error));
   }
 
   ngOnInit() {
   }
 
+  ngOnDestroy(): void {
+    if (this.subs$) this.subs$.unsubscribe();
+  }
 }

@@ -33,43 +33,56 @@ import {UserServiceService} from "./user-service.service";
 })
 export class SignUpComponent implements OnInit, OnDestroy {
   formSignUp: FormGroup;
+  private emailTimeout;
   private subs$;
 
   constructor(private fb: FormBuilder, private userService: UserServiceService) {
     this.formSignUp = fb.group({
       'username': ['', Validators.required],
-      'email': ['', Validators.compose([Validators.required, Validators.email]), [this.asyncEmailValidator]],
+      'email': ['', Validators.compose([Validators.required, Validators.email]), [this.asyncEmailValidator.bind(this)]],
       'password': ['', Validators.required],
       'passwordConfirm': ['', Validators.required]
-    },  {validator: this.checkPasswords });
+    }, {validator: this.checkPasswords});
   }
+
   checkPasswords(group: FormGroup) {
     let pass = group.get('password').value;
     let confirmPass = group.get('passwordConfirm').value;
-    return pass === confirmPass ? null : { different: true }
+    return pass === confirmPass ? null : {different: true}
   }
+
   asyncEmailValidator(control: FormControl): Promise<any> | Observable<any> {
+    clearTimeout(this.emailTimeout);
     return new Promise<any>((resolve, reject) => {
-      //db req
-      setTimeout(() => {
-        console.log(control.value);
-        if (control.value != 'bbaatar@mum.edu') resolve({'invalid': true});
-        else resolve(null);
-      }, 1500);
+      this.emailTimeout = setTimeout(() => {
+        this.userService.sendPost('http://localhost:3000/check', {email: control.value})
+        .subscribe(
+          res => {
+            if (res.exists != 1) resolve(null);
+            else resolve({invalid: true});
+          },
+          error => resolve({invalid: true}));
+      }, 600);
     });
   }
 
   onSubmit() {
     this.subs$ = this.userService.sendPost('http://localhost:3000/signup', this.formSignUp.value)
-    .subscribe(res => console.log("response",res),
-        error => console.error(error));
+    .subscribe(res => {
+        if (res.token) {
+          localStorage.setItem("token", res.token);
+          console.log("Sign up success");
+        }
+        else console.error(res);
+      },
+      error => console.error(error));
   }
 
   ngOnInit() {
   }
 
   ngOnDestroy(): void {
-    this.subs$.unsubscribe();
+    if (this.subs$) this.subs$.unsubscribe();
   }
 
 }

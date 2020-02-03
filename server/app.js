@@ -8,6 +8,7 @@ const cors = require('cors');
 const signInRouter = require('./routes/signin');
 const signUpRouter = require('./routes/signup');
 const privateRouter = require('./routes/private');
+const checkRouter = require('./routes/check');
 const MongoClient = require('mongodb').MongoClient;
 const dburl = "mongodb://localhost:27017/users";
 let db;
@@ -48,6 +49,7 @@ app.use(async (req, res, next) => {
 app.use('/signin', signInRouter);
 app.use('/signup', signUpRouter);
 app.use('/api', privateRouter);
+app.use('/check', checkRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

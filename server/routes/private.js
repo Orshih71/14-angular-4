@@ -13,15 +13,13 @@ function hasToken(req, res, next) {
 	}
 }
 
-/* GET  listing. */
+/* GET  secret json. */
 router.get('/protected', hasToken, function (req, res, next) {
-  const {token} = req;
-  jwt.verify(token, 'privateKey', function(err, decoded) {
-    if (err) {
-      next(err);
-    }
-  });
-  res.json({"private": 1});
+	const {token} = req;
+	jwt.verify(token, 'privateKey', function (err, decoded) {
+		if (err) res.json(err);
+		else res.json({"private": 1});
+	});
 });
 
 module.exports = router;

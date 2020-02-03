@@ -17,8 +17,8 @@ router.post('/', async (req, res, next) => {
     "email": email,
     "password": encPass
   });
-  res.setHeader("Authorization", "Bearer " + token);
-  res.json({"success":1})
+  // res.setHeader("Authorization", "Bearer " + token);
+  res.json({"success":1, "token": token})
 });
 
 module.exports = router;
